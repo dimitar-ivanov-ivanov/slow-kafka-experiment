@@ -1,0 +1,16 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: kafka-consumer
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092
+      group-id: performance-test-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+logging:
+  level:
+    org.apache.kafka: INFO
+    com.example.kafka: DEBUG
