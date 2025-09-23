@@ -37,33 +37,17 @@ topic:
   I'm doing this to make Kafka put resources into syncing the replica.
 
 producer:
+ producer is really just a loop over the desired amount of messages, for each iteration a new message is published to Kafka.
  acks = 1 -> 
   When acks=1 , producers consider messages as "written successfully" when the message was acknowledged by only the leader.
   Leader response is requested, but replication is not a guarantee as it happens in the background. If an ack is not received, the producer may retry the request. If the leader broker goes offline unexpectedly but replicas haven’t replicated the data yet, we have a data loss.
   
 consumer:
+ The consumer logic is a literally just increasing a counter and acknowledging that the message was consumed. For each 5K messages we make a log to track our
  concurrency: 10 -> 10 consumer threads reading from 10 partitions 
 
 I can think of 4 levels on which we can make changes to slow processing
 
-1) Broker
-   - Reduce num.network.threads and num.io.threads to 1
-   - Decrease buffer sizes (socket.send.buffer.bytes, socket.receive.buffer.bytes)
-   - Force frequent flushes (log.flush.interval.messages=1)
-2) Topic
-   - increase number of segments for topic 
-   - decrease message retention (increases overhead for deleting messages)
-3) Consumer 
-   - set max.poll.records = 1
-   - disable auto-commit and do manual acknolwedgements
-4) Producer
-   - Reduce batch.size to 1
-   - Set linger.ms=0 (no batching)
-   - Add compression.type=gzip
-   - every message has the same message id 
-      - message id goes through hash function and the messages with the same id go into the same partition
-      - this essentially makes consumption single-threaded, also the leftover consumer threads are wasting resources and not doing anything
-    
 Results:
  Before each tests I run 2 warmups, one with 1k events and another with 5k events.
  There will be 3 cases that I run 
@@ -87,49 +71,31 @@ Results:
      consumer: Processed 1000000 messages in 1481 ms (675219.45 msg/sec)
 
  2) Broker config changes 
-      # reducing these threads intentially for perf testing
-      KAFKA_NUM_NETWORK_THREADS: 1
-      KAFKA_NUM_IO_THREADS: 1
-      KAFKA_SOCKET_SEND_BUFFER_BYTES: 1024          # Tiny send buffer (default ~102KB)
-      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 1024       # Tiny receive buffer (default ~102KB)
-      KAFKA_SOCKET_REQUEST_MAX_BYTES: 1048576       # Reduced max request size
-      KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: 1          # Flush after EVERY message
-      KAFKA_LOG_FLUSH_INTERVAL_MS: 10               # Also flush every 10ms
-      KAFKA_LOG_SEGMENT_BYTES: 1048576              # Small log segments (1MB)
-      # Additional slow settings
-      KAFKA_REPLICA_FETCH_MIN_BYTES: 1              # Minimum fetch size
-      KAFKA_REPLICA_FETCH_WAIT_MAX_MS: 100          # Reduce wait time
-      KAFKA_LOG_ROLL_MS: 60000                      # Roll logs frequently (1 minute)
-      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 30000  # Check retention frequently
-
      1) 10k events 
-        producer: Sent 10000 messages in 33 ms (303030.30 msg/sec)
-        consumer: Processed 10000 messages in 210 ms (47619.05 msg/sec)
+        producer: Sent 10000 messages in 164 ms (60975.61 msg/sec)
+        consumer: Processed 10000 messages in 405 ms (24691.36 msg/sec)
      2) 50k events
-        producer: Sent 50000 messages in 98 ms (510204.08 msg/sec)
-        consumer: Processed 50000 messages in 1015 ms (49261.08 msg/sec)
+        producer: Sent 50000 messages in 205 ms (243902.44 msg/sec)
+        consumer: Processed 50000 messages in 2175 ms (22988.51 msg/sec)
      3) 100k events
-        producer: Sent 100000 messages in 144 ms (694444.44 msg/sec)
-        consumer: Processed 100000 messages in 1724 ms (58004.64 msg/sec)
-     4) 1 million events   
-        producer: Sent 1000000 messages in 11606 ms (86162.33 msg/sec)
-        consumer: Processed 1000000 messages in 20913 ms (47817.15 msg/sec)
+        producer: Sent 100000 messages in 230 ms (434782.61 msg/sec)
+        consumer: Processed 100000 messages in 2505 ms (39920.16 msg/sec)
 
- 3) Consumer
-    - Max poll record = 1
-    - Manual acknowledgement with delay
-    - fetching data byte by byte 
-    - having only 1 thread read 10 partitions and switch context 
-  1) 10k events
-     producer: Sent 10000 messages in 17 ms (588235.29 msg/sec)
-     consumer: Processed 10000 messages in 100905 ms (99.10 msg/sec) - Latest: Sending batch message 69304 at 2025-09-23T05:38:21.468162600
-  2) 50k events
-     producer: Sent 50000 messages in 65 ms (769230.77 msg/sec)
-     consumer: Processed 50000 messages in 507967 ms (98.43 msg/sec)
-  3) 100k events
-     producer: Sent 100000 messages in 112 ms (892857.14 msg/sec)
-     consumer: Processed 100000 messages in 1015010 ms (98.52 msg/sec)
-  4) 1 million events
+ 3) Consumer config changes 
+     1) 10k events 
+        producer: Sent 10000 messages in 54 ms (185185.19 msg/sec)
+        consumer: Processed 10000 messages in 158950 ms (62.91 msg/sec)
+     2) 50k events
+        producer: Sent 50000 messages in 224 ms (223214.29 msg/sec)
+        consumer: Processed 50000 messages in 761824 ms (65.63 msg/sec) 
+     3) 100k events       
+        producer: Sent 100000 messages in 216 ms (462962.96 msg/sec)
+        consumer: Processed 100000 messages in 1531620 ms (65.29 msg/sec) 
+
+Overall:
+10K: 45,454 → 62.91 = 🚨 722x slower
+50K: 381,679 → 65.63 = 🚨 5,817x slower
+100K: 500,000 → 65.29 = 🚨 7,658x slower
 
   Honestly during the warmup this started so slow I though I completely broke it for a second.
   And when I saw that the warmup took 41 seconds I knew this was going to be good.

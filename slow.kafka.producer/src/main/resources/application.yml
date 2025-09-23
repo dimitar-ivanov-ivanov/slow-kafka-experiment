@@ -9,9 +9,9 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
-logging:
-  level:
-    org.springframework.kafka: DEBUG
-    org.apache.kafka.clients: DEBUG
-    org.apache.kafka: INFO
-    com.example.kafka: DEBUG
+#logging:
+#  level:
+    #org.springframework.kafka: DEBUG
+    #org.apache.kafka.clients: DEBUG
+    #org.apache.kafka: INFO
+    #com.example.kafka: DEBUG
