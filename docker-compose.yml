@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -13,35 +12,91 @@ services:
       - zookeeper-data:/var/lib/zookeeper/data
       - zookeeper-log:/var/lib/zookeeper/log  
 
-  kafka:
+  kafka1:
     image: confluentinc/cp-kafka:7.4.0
-    hostname: kafka
-    container_name: kafka
+    hostname: kafka1
+    container_name: kafka1
     depends_on:
       - zookeeper
     ports:
       - "9092:9092"
-      - "9997:9997"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1 #important for creating consumer_offsets topic, without this consumer app doesn't start
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      # reducing these threads intentially for perf testing
+      KAFKA_NUM_NETWORK_THREADS: 1
+      KAFKA_NUM_IO_THREADS: 1
+      KAFKA_SOCKET_SEND_BUFFER_BYTES: 1024          # Tiny send buffer (default ~102KB)
+      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 1024       # Tiny receive buffer (default ~102KB)
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 262144        # Reduced max request size
+      KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: 1          # Flush to disk after EVERY message
+      KAFKA_LOG_FLUSH_INTERVAL_MS: 1                # Also flush to disk every 1 ms
+      # This is about 1-2 messages, so a new segment for each message
+      KAFKA_LOG_SEGMENT_BYTES: 262144                    # Small log segments (1 byte)
+      # Additional slow settings
+      #KAFKA_REPLICA_FETCH_MIN_BYTES: 1              # Minimum fetch size (leave this for consumer testing)
+      #KAFKA_REPLICA_FETCH_WAIT_MAX_MS: 100          # Reduce wait time (leave this for consumer testing)
+      KAFKA_LOG_ROLL_MS: 1                           # Forces a new segment file after every millisecond, even if the old one has almost nothing in it
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 1       # Check retention frequently (the more)
     volumes:
-      - kafka-data:/var/lib/kafka/data      
+      - kafka1-data:/var/lib/kafka/data    
+    
+  kafka2:
+    image: confluentinc/cp-kafka:7.4.0
+    hostname: kafka2
+    container_name: kafka2
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka2:29093,PLAINTEXT_HOST://localhost:9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1  #important for creating consumer_offsets topic, without this consumer app doesn't start
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      # reducing these threads intentially for perf testing
+      KAFKA_NUM_NETWORK_THREADS: 1
+      KAFKA_NUM_IO_THREADS: 1
+      KAFKA_SOCKET_SEND_BUFFER_BYTES: 1024          # Tiny send buffer (default ~102KB)
+      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 1024       # Tiny receive buffer (default ~102KB)
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 262144        # Reduced max request size
+      KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: 1          # Flush after EVERY message
+      KAFKA_LOG_FLUSH_INTERVAL_MS: 10               # Also flush every 10ms
+      KAFKA_LOG_SEGMENT_BYTES: 262144               # Small log segments
+      # Additional slow settings
+      #KAFKA_REPLICA_FETCH_MIN_BYTES: 1              # Minimum fetch size
+      #KAFKA_REPLICA_FETCH_WAIT_MAX_MS: 100          # Reduce wait time
+      KAFKA_LOG_ROLL_MS: 1                           # Forces a new segment file after every millisecond, even if the old one has almost nothing in it
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 1       # Check retention frequently
+    volumes:
+      - kafka2-data:/var/lib/kafka/data          
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     depends_on:
-      - kafka
+      - kafka1
+      - kafka2
     ports:
       - "8090:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:29092,kafka2:29093
 
 volumes:
-  kafka-data:
+  kafka1-data:
+  kafka2-data:
   zookeeper-data:
   zookeeper-log:

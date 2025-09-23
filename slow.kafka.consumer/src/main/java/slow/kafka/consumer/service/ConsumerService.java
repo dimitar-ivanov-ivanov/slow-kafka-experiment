@@ -1,7 +1,7 @@
 package slow.kafka.consumer.service;
 
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,12 +14,12 @@ public class ConsumerService {
     private long startTime = System.currentTimeMillis();
 
     @KafkaListener(topics = "test-topic", containerFactory = "kafkaListenerContainerFactory")
-    public void consumeMessage(String message) {
+    public void consumeMessage(String message /*,Acknowledgment acknowledgement*/) {
 
         long count = messageCounter.incrementAndGet();
 
         // Periodically log performance
-        if (count % 500 == 0) {
+        if (count % 5000 == 0) {
             long currentTime = System.currentTimeMillis();
             long elapsed = currentTime - startTime;
             double messagesPerSecond = count * 1000.0 / elapsed;
@@ -28,11 +28,7 @@ public class ConsumerService {
                     count, elapsed, messagesPerSecond, message);
         }
 
-        // Simulate some processing time (optional - remove for pure throughput test)
-        // try { Thread.sleep(1); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-
-        // Manual acknowledgment (if needed)
-        // acknowledgment.acknowledge();
+        //acknowledgement.acknowledge();
     }
 
     public void resetCounters() {
