@@ -8,6 +8,7 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      #value-serializer: slow.kafka.producer.util.XmlSerializer
 
 #logging:
 #  level:

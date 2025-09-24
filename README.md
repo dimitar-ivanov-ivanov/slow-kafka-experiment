@@ -38,6 +38,8 @@ topic:
 
 producer:
  producer is really just a loop over the desired amount of messages, for each iteration a new message is published to Kafka.
+ It produces an event in Strin format, where the value is "Sending message COUNT at TIME" without any key or headers. Lack of key means that Kafka will put the event into partitions 
+ round-robin style.
  acks = 1 -> 
   When acks=1 , producers consider messages as "written successfully" when the message was acknowledged by only the leader.
   Leader response is requested, but replication is not a guarantee as it happens in the background. If an ack is not received, the producer may retry the request. If the leader broker goes offline unexpectedly but replicas haven’t replicated the data yet, we have a data loss.
@@ -91,6 +93,10 @@ Results:
      3) 100k events       
         producer: Sent 100000 messages in 216 ms (462962.96 msg/sec)
         consumer: Processed 100000 messages in 1531620 ms (65.29 msg/sec) 
+ 4) Enabling XML changes 
+     1) 10k events
+     2) 50k events
+     3) 100k events        
 
 Overall:
 10K: 45,454 → 62.91 = 🚨 722x slower

@@ -28,7 +28,7 @@ public class ProducerService {
         long start = System.currentTimeMillis();
 
         for (int i = 0; i < count; i++) {
-            String message = String.format("Sending batch message %d at %s",
+            String message = String.format("Sending message %d at %s",
                     messageCounter.incrementAndGet(), LocalDateTime.now());
 
             template.send(TOPIC, message);
