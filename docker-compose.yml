@@ -41,8 +41,6 @@ services:
       # This is about 1-2 messages, so a new segment for each message
       KAFKA_LOG_SEGMENT_BYTES: 262144                    # Small log segments (1 byte)
       # Additional slow settings
-      #KAFKA_REPLICA_FETCH_MIN_BYTES: 1              # Minimum fetch size (leave this for consumer testing)
-      #KAFKA_REPLICA_FETCH_WAIT_MAX_MS: 100          # Reduce wait time (leave this for consumer testing)
       KAFKA_LOG_ROLL_MS: 1                           # Forces a new segment file after every millisecond, even if the old one has almost nothing in it
       KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 1       # Check retention frequently (the more)
     volumes:
@@ -76,8 +74,6 @@ services:
       KAFKA_LOG_FLUSH_INTERVAL_MS: 10               # Also flush every 10ms
       KAFKA_LOG_SEGMENT_BYTES: 262144               # Small log segments
       # Additional slow settings
-      #KAFKA_REPLICA_FETCH_MIN_BYTES: 1              # Minimum fetch size
-      #KAFKA_REPLICA_FETCH_WAIT_MAX_MS: 100          # Reduce wait time
       KAFKA_LOG_ROLL_MS: 1                           # Forces a new segment file after every millisecond, even if the old one has almost nothing in it
       KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 1       # Check retention frequently
     volumes:
