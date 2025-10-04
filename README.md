@@ -15,12 +15,12 @@ An experiment to see how slow I make a kafka producer/consumer app
  - OS: Windows 11
 
 # Local setup:
- 1. Install Java, Gradle and Docker
- 2. Build both producer and consumer apps (gradle clean build)
- 2. Run docker-compose up -d to start Zookeeper And 2 Kafka brokers 
- 3. [TOPIC CREATION] Create topic for testing ``docker exec -it kafka1 kafka-topics --create --topic test-topic --bootstrap-server kafka1:29092,kafka2:29093 --replication-factor 2 --partitions 10``
+  - Install Java, Gradle and Docker
+  - Build both producer and consumer apps (gradle clean build)
+  - Run docker-compose up -d to start Zookeeper And 2 Kafka brokers 
+  - [TOPIC CREATION] Create topic for testing ``docker exec -it kafka1 kafka-topics --create --topic test-topic --bootstrap-server kafka1:29092,kafka2:29093 --replication-factor 2 --partitions 10``
    - verify succesful creation ``docker exec kafka-perf-testing kafka-topics --list --bootstrap-server kafka-perf-testing:9092``
- 4. Run both apps either through Intellij or manually
+  - Run both apps either through Intellij or manually
      - enter slow-kafka-experiment\slow.kafka.producer\build\libs and slow-kafka-experiment\slow.kafka.consumer\build\libs
      - java -jar slow.kafka.producer-0.0.1-SNAPSHOT.jar
      - java -jar slow.kafka.consumer-0.0.1-SNAPSHOT.jar
