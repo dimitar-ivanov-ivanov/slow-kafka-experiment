@@ -39,9 +39,9 @@ services:
       KAFKA_LOG_FLUSH_INTERVAL_MESSAGES: 1          # Flush to disk after EVERY message
       KAFKA_LOG_FLUSH_INTERVAL_MS: 1                # Also flush to disk every 1 ms
       # This is about 1-2 messages, so a new segment for each message
-      KAFKA_LOG_SEGMENT_BYTES: 262144                    # Small log segments (1 byte)
+      KAFKA_LOG_SEGMENT_BYTES: 262144                    # Small log segments
       # Additional slow settings
-      KAFKA_LOG_ROLL_MS: 1                           # Forces a new segment file after every millisecond, even if the old one has almost nothing in it
+      KAFKA_LOG_ROLL_MS: 1                           # Forces creation of a new segment file every millisecond, even if the old one has almost nothing in it
       KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 1       # Check retention frequently (the more)
     volumes:
       - kafka1-data:/var/lib/kafka/data    

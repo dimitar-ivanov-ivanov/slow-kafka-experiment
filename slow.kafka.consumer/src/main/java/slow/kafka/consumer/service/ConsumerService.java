@@ -14,7 +14,7 @@ public class ConsumerService {
     private long startTime = System.currentTimeMillis();
 
     @KafkaListener(topics = "test-topic", containerFactory = "kafkaListenerContainerFactory")
-    public void consumeMessage(String message ,Acknowledgment acknowledgement) {
+    public void consumeMessage(String message, Acknowledgment acknowledgement) {
 
         long count = messageCounter.incrementAndGet();
 

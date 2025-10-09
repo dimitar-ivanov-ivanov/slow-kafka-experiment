@@ -27,12 +27,11 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "performance-test-group");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        // tried changing the message format to xml but it got faster
+        // tried changing the message format to xml but it got faster....
         //props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, XmlDeserializer.class);
 
         // Essential settings
         //props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, true);
         props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, 1000);
 
         // process one message at a time (vs 500 default)
@@ -45,7 +44,9 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.FETCH_MAX_BYTES_CONFIG, 1); // 1 byte vs 50MB default
 
         // increase fetch wait time (slower polling)
-        props.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 5000); // 5s vs 500ms default
+        // actually blocks when the broker can't get enough data for FETCH_MAX_BYTES_CONFIG
+        // but we're constantly sending events and max bytes = 1, so this will never block the consumer
+        //props.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 5000); // 5s vs 500ms default
 
         // smaller receive buffer
         props.put(ConsumerConfig.RECEIVE_BUFFER_CONFIG, 1); // 1 byte vs 64KB default
@@ -65,7 +66,8 @@ public class KafkaConsumerConfig {
         // use manual offset commits to decrease performance
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         // 1 second acknowledgement delay
-        factory.getContainerProperties().setAckTime(1000);
+        // Useless config, only wors for ack mode = COUNT or TIME
+        //factory.getContainerProperties().setAckTime(1000);
 
         // individual message processing
         factory.setBatchListener(false);

@@ -32,7 +32,7 @@ An experiment to see how slow I make a kafka producer/consumer app
 
  - topic:
    - partitions: 10 
-     - A Kafka topic is split into partitions, the idea is to distribute the data in the topic, these partitions give Kafka its scalability as the consumers aim to create consumer threads equal to the number of partitions.
+     - A Kafka topic is split into partitions, the idea is to distribute the data in the topic, these partitions give Kafka its scalability as the consumers aim to create consumer threads equal to the number of partitions and poll events in parallel from different partitions.
    - replication factor: 2 
      - This means that the leader partition will have its data replicated on the second broker.
      I'm doing this to make Kafka put resources into syncing the replica.
